@@ -64,9 +64,12 @@ fn unroll(expr: &Expr) -> Expr {
             ref body,
             ..
         } = *for_loop;
-        let recurse_on_forloop_body = || {
+
+        let new_body = unroll_in_block(&*body);
+
+        let forloop_with_body = |body| {
             Expr::ForLoop(ExprForLoop {
-                body: unroll_in_block(&*body),
+                body,
                 ..(*for_loop).clone()
             })
         };
@@ -80,7 +83,7 @@ fn unroll(expr: &Expr) -> Expr {
         {
             // Don't know how to deal with these so skip and return the original.
             if !by_ref.is_none() || !mutability.is_none() || !subpat.is_none() {
-                return recurse_on_forloop_body();
+                return forloop_with_body(new_body);
             }
             let idx = ident; // got the index variable name
 
@@ -100,7 +103,7 @@ fn unroll(expr: &Expr) -> Expr {
                     {
                         lit_int.value() as usize
                     } else {
-                        return recurse_on_forloop_body();
+                        return forloop_with_body(new_body);
                     }
                 } else {
                     0
@@ -115,11 +118,11 @@ fn unroll(expr: &Expr) -> Expr {
                     {
                         lit_int.value() as usize
                     } else {
-                        return recurse_on_forloop_body();
+                        return forloop_with_body(new_body);
                     }
                 } else {
                     // we need to know where the limit is to know how much to unroll by.
-                    return recurse_on_forloop_body();
+                    return forloop_with_body(new_body);
                 } + if let &RangeLimits::Closed(_) = limits {
                     1
                 } else {
@@ -132,7 +135,7 @@ fn unroll(expr: &Expr) -> Expr {
                         #[allow(non_upper_case_globals)]
                         {
                             const #idx: usize = #i;
-                            #body
+                            #new_body
                         }).into();
                     stmts.push(
                         syn::parse::<Stmt>(block_ts).expect("Couldn't parse block into stmt."),
@@ -147,10 +150,10 @@ fn unroll(expr: &Expr) -> Expr {
                     block,
                 });
             } else {
-                recurse_on_forloop_body()
+                forloop_with_body(new_body)
             }
         } else {
-            recurse_on_forloop_body()
+            forloop_with_body(new_body)
         }
     } else if let &Expr::If(ref if_expr) = expr {
         let ExprIf {
