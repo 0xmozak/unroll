@@ -6,7 +6,7 @@ extern crate quote;
 extern crate syn;
 
 use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
-          PatIdent, RangeLimits, Stmt};
+          PatIdent, RangeLimits, Stmt, ExprIf, ExprIfLet};
 use syn::token::Brace;
 use proc_macro::TokenStream;
 
@@ -41,7 +41,11 @@ fn unroll_in_block(block: &Block) -> Block {
     } = block;
     let mut new_stmts = Vec::new();
     for stmt in stmts.iter() {
-        new_stmts.push(unroll(stmt));
+        if let &Stmt::Expr(ref expr) = stmt {
+            new_stmts.push(Stmt::Expr(unroll(expr)));
+        } else if let &Stmt::Semi(ref expr, semi) = stmt {
+            new_stmts.push(Stmt::Semi(unroll(expr), semi));
+        }
     }
     Block {
         brace_token: brace_token.clone(),
@@ -51,9 +55,9 @@ fn unroll_in_block(block: &Block) -> Block {
 
 /// Routine to unroll a for loop statement, or return the statement unchanged if it's not a for
 /// loop.
-fn unroll(stmt: &Stmt) -> Stmt {
+fn unroll(expr: &Expr) -> Expr {
     // impose a scope that we can break out of so we can return stmt without copying it.
-    if let &Stmt::Expr(Expr::ForLoop(ref for_loop)) = stmt {
+    if let &Expr::ForLoop(ref for_loop) = expr {
         let ExprForLoop {
             ref pat,
             expr: ref range_expr,
@@ -61,10 +65,10 @@ fn unroll(stmt: &Stmt) -> Stmt {
             ..
         } = *for_loop;
         let recurse_on_forloop_body = || {
-            Stmt::Expr(Expr::ForLoop(ExprForLoop {
+            Expr::ForLoop(ExprForLoop {
                 body: unroll_in_block(&*body),
                 ..(*for_loop).clone()
-            }))
+            })
         };
 
         if let Pat::Ident(PatIdent {
@@ -138,32 +142,49 @@ fn unroll(stmt: &Stmt) -> Stmt {
                     brace_token: Brace::default(),
                     stmts,
                 };
-                return Stmt::Expr(Expr::Block(ExprBlock {
+                return Expr::Block(ExprBlock {
                     attrs: Vec::new(),
                     block,
-                }));
+                });
             } else {
-                return recurse_on_forloop_body();
+                recurse_on_forloop_body()
             }
         } else {
-            return recurse_on_forloop_body();
+            recurse_on_forloop_body()
         }
-    } else if let &Stmt::Expr(Expr::Block(ref expr_block)) = stmt {
+    } else if let &Expr::If(ref if_expr) = expr {
+        let ExprIf {
+            ref cond,
+            ref then_branch,
+            ref else_branch,
+            ..
+        } = *if_expr;
+        Expr::If(ExprIf {
+            cond: Box::new(unroll(&**cond)),
+            then_branch: unroll_in_block(&*then_branch),
+            else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&*x.1)))),
+            ..(*if_expr).clone()
+        })
+    } else if let &Expr::IfLet(ref if_expr) = expr {
+        let ExprIfLet {
+            ref expr,
+            ref then_branch,
+            ref else_branch,
+            ..
+        } = *if_expr;
+        Expr::IfLet(ExprIfLet {
+            expr: Box::new(unroll(&**expr)),
+            then_branch: unroll_in_block(&*then_branch),
+            else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&*x.1)))),
+            ..(*if_expr).clone()
+        })
+    } else if let &Expr::Block(ref expr_block) = expr {
         let ExprBlock { ref block, .. } = *expr_block;
-        Stmt::Expr(Expr::Block(ExprBlock {
+        Expr::Block(ExprBlock {
             block: unroll_in_block(&*block),
             ..(*expr_block).clone()
-        }))
-    } else if let &Stmt::Semi(Expr::Block(ref expr_block), semi) = stmt {
-        let ExprBlock { ref block, .. } = *expr_block;
-        Stmt::Semi(
-            Expr::Block(ExprBlock {
-                block: unroll_in_block(&*block),
-                ..(*expr_block).clone()
-            }),
-            semi,
-        )
+        })
     } else {
-        (*stmt).clone()
+        (*expr).clone()
     }
 }
