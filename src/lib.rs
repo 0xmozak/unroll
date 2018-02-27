@@ -45,6 +45,8 @@ fn unroll_in_block(block: &Block) -> Block {
             new_stmts.push(Stmt::Expr(unroll(expr)));
         } else if let &Stmt::Semi(ref expr, semi) = stmt {
             new_stmts.push(Stmt::Semi(unroll(expr), semi));
+        } else {
+            new_stmts.push((*stmt).clone());
         }
     }
     Block {
@@ -131,14 +133,15 @@ fn unroll(expr: &Expr) -> Expr {
 
                 let mut stmts = Vec::new();
                 for i in begin..end {
-                    let block_ts: TokenStream = quote!(
+                    let block_tokens = quote!(
                         #[allow(non_upper_case_globals)]
                         {
                             const #idx: usize = #i;
                             #new_body
-                        }).into();
+                        });
+                    let block_stream: TokenStream = block_tokens.into();
                     stmts.push(
-                        syn::parse::<Stmt>(block_ts).expect("Couldn't parse block into stmt."),
+                        syn::parse::<Stmt>(block_stream).expect("Couldn't parse block into stmt."),
                     );
                 }
                 let block = Block {
