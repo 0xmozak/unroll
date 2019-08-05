@@ -5,7 +5,7 @@ extern crate quote;
 extern crate syn;
 
 use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
-          PatIdent, RangeLimits, Stmt, ExprIf, ExprIfLet};
+          PatIdent, RangeLimits, Stmt, ExprIf, ExprLet};
 use syn::token::Brace;
 use proc_macro::TokenStream;
 
@@ -60,6 +60,7 @@ fn unroll(expr: &Expr) -> Expr {
     // impose a scope that we can break out of so we can return stmt without copying it.
     if let &Expr::ForLoop(ref for_loop) = expr {
         let ExprForLoop {
+            ref label,
             ref pat,
             expr: ref range_expr,
             ref body,
@@ -149,6 +150,7 @@ fn unroll(expr: &Expr) -> Expr {
                 };
                 return Expr::Block(ExprBlock {
                     attrs: Vec::new(),
+                    label: label.clone(),
                     block,
                 });
             } else {
@@ -170,18 +172,14 @@ fn unroll(expr: &Expr) -> Expr {
             else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&*x.1)))),
             ..(*if_expr).clone()
         })
-    } else if let &Expr::IfLet(ref if_expr) = expr {
-        let ExprIfLet {
+    } else if let &Expr::Let(ref let_expr) = expr {
+        let ExprLet {
             ref expr,
-            ref then_branch,
-            ref else_branch,
             ..
-        } = *if_expr;
-        Expr::IfLet(ExprIfLet {
+        } = *let_expr;
+        Expr::Let(ExprLet {
             expr: Box::new(unroll(&**expr)),
-            then_branch: unroll_in_block(&*then_branch),
-            else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&*x.1)))),
-            ..(*if_expr).clone()
+            ..(*let_expr).clone()
         })
     } else if let &Expr::Block(ref expr_block) = expr {
         let ExprBlock { ref block, .. } = *expr_block;

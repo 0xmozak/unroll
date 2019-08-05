@@ -1,11 +1,23 @@
 [package]
 name = "unroll"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+edition = "2018"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = { version = "0.14", features = ["full"] }
+syn = { version = "0.15", features = ["full"] }
 quote = "0.6"
+
+[dev-dependencies]
+criterion = "0.2"
+rand = "0.7"
+
+[features]
+unstable = ["criterion/real_blackbox"]
+
+[[bench]]
+name = "unroll_for_loops"
+harness = false
