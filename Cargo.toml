@@ -19,5 +19,9 @@ rand = "0.7"
 unstable = ["criterion/real_blackbox"]
 
 [[bench]]
-name = "unroll_for_loops"
+name = "matrix_vector_product"
+harness = false
+
+[[bench]]
+name = "unroll_sum"
 harness = false
