@@ -1,8 +1,43 @@
 #![recursion_limit = "128"]
+
+//! An attribute-like procedural macro for unrolling for loops with integer literal bounds.
+//! 
+//! This crate provides the [`unroll_for_loops`] attribute-like macro that can be applied to
+//! functions containing for-loops with integer bounds. This macro looks for loops to unroll and
+//! unrolls them at compile time.
+//! 
+//!
+//! ## Usage
+//! 
+//! Just add `#[unroll_for_loops]` above the function whose for loops you would like to unroll.
+//! Currently all for loops with integer literal bounds will be unrolled, although this macro
+//! currently can't see inside complex code (e.g. for loops within closures or other `macro_rules!`
+//! macros).
+//! 
+//! 
+//! ## Example
+//! 
+//! The following function computes a matrix-vector product and returns the result as an array.
+//! Both of the inner for-loops are unrolled when `#[unroll_for_loops]` is applied.
+//! 
+//! ```rust
+//! use unroll::unroll_for_loops;
+//!
+//! #[unroll_for_loops]
+//! fn mtx_vec_mul(mtx: &[[f64; 5]; 5], vec: &[f64; 5]) -> [f64; 5] {
+//!     let mut out = [0.0; 5];
+//!     for col in 0..5 {
+//!         for row in 0..5 {
+//!             out[row] += mtx[col][row] * vec[col];
+//!         }
+//!     }
+//!     out
+//! }
+//! ```
+
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
-extern crate syn;
 
 use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
           PatIdent, RangeLimits, Stmt, ExprIf, ExprLet};

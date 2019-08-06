@@ -1,4 +1,4 @@
-# unroll
+# `unroll`
 
 Unroll for loops with integer literal bounds. This crate provides a attribute-like macro
 `unroll_for_loops` that can be applied to functions. This macro looks for loops to unroll and
@@ -66,10 +66,10 @@ A quick [benchmark](./benches/matrix_vector_product.rs) of this code generated b
 [criterion](https://crates.io/crates/criterion) shows a 3x performance increase with loop unrolling:
 
 ```
-Matrix-Vector Product
+Matrix-Vector Product/Ordinary
 time:   [2.7254 ns 2.7657 ns 2.8153 ns]
 
-Unrolled Matrix-Vector Product
+Matrix-Vector Product/Unrolled
 time:   [878.71 ps 882.96 ps 888.01 ps]
 ```
 
@@ -117,13 +117,15 @@ However this example is unlikely to benefit from the `unroll_for_loops` macro. A
 [benchmark](./benches/unroll_sum.rs) for unrolling sums is included for verification.
 
 Having said this, a macro that can partially unroll loops as shown above can be very useful
-and is left for future work. Contributions are welcome!
+and is left for future work.
+
+Contributions are welcome!
 
 
 # Acknowledgements
 
-I would like to thank the author of [Crunchy](https://github.com/Vurich/crunchy) for providing an
-initial solution to this problem.
+I would like to thank the author of [Crunchy](https://github.com/Vurich/crunchy) for the initial
+great solution to this problem.
 
 
 # License
