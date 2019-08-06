@@ -74,7 +74,12 @@ time:   [878.71 ps 882.96 ps 888.01 ps]
 ```
 
 The relative performance difference can be visualized in the violin plot:
-<img src="./img/violin.svg" alt="Violin plot for Matrix-Vector product benchmark">
+
+<p align="center">
+<a href="https://gitlab.com/elrnv/unroll/raw/master/img/violin.svg">
+    <img src="https://gitlab.com/elrnv/unroll/raw/master/img/violin.svg" alt="Violin plot for Matrix-Vector product benchmark" />
+</a>
+</p>
 
 
 ### Bad Uses
