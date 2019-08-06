@@ -14,7 +14,7 @@ documentation = "https://docs.rs/unroll"
 keywords = ["unroll", "for-loop", "attibute"]
 
 [badges]
-gitlab = { repository = "https://gitlab.com/elrnv/unroll", branch = "master" }
+gitlab = { repository = "elrnv/unroll", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [lib]
