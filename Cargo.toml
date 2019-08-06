@@ -2,7 +2,20 @@
 name = "unroll"
 version = "0.1.2"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "An attribute-like procedural macro for unrolling for loops"
+readme = "README.md"
 edition = "2018"
+
+homepage = "https://gitlab.com/elrnv/unroll"
+repository = "https://gitlab.com/elrnv/unroll"
+documentation = "https://docs.rs/unroll"
+
+keywords = ["unroll", "for-loop", "attibute"]
+
+[badges]
+gitlab = { repository = "https://gitlab.com/elrnv/unroll", branch = "master" }
+maintenance = { status = "passively-maintained" }
 
 [lib]
 proc-macro = true

@@ -1,9 +1,13 @@
 # `unroll`
 
-Unroll for loops with integer literal bounds. This crate provides a attribute-like macro
-`unroll_for_loops` that can be applied to functions. This macro looks for loops to unroll and
-unrolls them at compile time.
+Unroll for loops with integer literal bounds using an attribute-like macro.
 
+[![On crates.io](https://img.shields.io/crates/v/unroll.svg)](https://crates.io/crates/unroll)
+[![On docs.rs](https://docs.rs/unroll/badge.svg)](https://docs.rs/unroll/)
+[![Build status](https://gitlab.com/elrnv/unroll/badges/master/pipeline.svg)](https://gitlab.com/elrnv/unroll/pipelines)
+
+This crate provides a attribute-like macro `unroll_for_loops` that can be applied to functions. This
+macro looks for loops to unroll and unrolls them at compile time.
 
 ## Why a procedural macro?
 
