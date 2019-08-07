@@ -38,3 +38,7 @@ harness = false
 [[bench]]
 name = "unroll_sum"
 harness = false
+
+[[bench]]
+name = "unroll_mode"
+harness = false
