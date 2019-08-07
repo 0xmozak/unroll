@@ -108,7 +108,7 @@ can get a substantial boost in performance when computed in chunks as:
 ```rust
 fn sum(data: &[f64]) -> f64 {
     let mut sum = [0.0; 32];
-    for i in (0..data.len() / 32).step_by(32) {
+    for i in (0..data.len()).step_by(32) {
         for j in 0..32 {
             sum[j] += data[i + j];
         }

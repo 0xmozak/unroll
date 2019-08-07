@@ -22,7 +22,7 @@ where
 #[unroll_for_loops]
 fn unrolled_inner_sum(v: &[f64]) -> f64 {
     let mut res = [0.0; 32];
-    for i in (0..v.len() / 32).step_by(32) {
+    for i in (0..v.len()).step_by(32) {
         for j in 0..32 {
             res[j] += v[i + j];
         }
@@ -33,7 +33,7 @@ fn unrolled_inner_sum(v: &[f64]) -> f64 {
 #[inline]
 fn unrolled_sum(v: &[f64]) -> f64 {
     let mut res = [0.0; 32];
-    for i in (0..v.len() / 32).step_by(32) {
+    for i in (0..v.len()).step_by(32) {
         for j in 0..32 {
             res[j] += v[i + j];
         }
@@ -50,7 +50,17 @@ fn explicit_sum(v: &[f64]) -> f64 {
     res
 }
 
+fn test_sum_implementations() {
+    let v = make_random_vec(LEN);
+    let sum = v.iter().sum::<f64>();
+    assert!((sum - explicit_sum(&v)).abs() < 1e-5);
+    assert!((sum - unrolled_sum(&v)).abs() < 1e-5);
+    assert!((sum - unrolled_inner_sum(&v)).abs() < 1e-5);
+}
+
 fn unroll_sum(c: &mut Criterion) {
+    test_sum_implementations();
+
     let iter_sum = Fun::new("Iter Sum", move |b, _| {
         let v = make_random_vec(LEN);
         b.iter(|| v.iter().sum::<f64>())
