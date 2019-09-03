@@ -11,8 +11,7 @@
 //! 
 //! Just add `#[unroll_for_loops]` above the function whose for loops you would like to unroll.
 //! Currently all for loops with integer literal bounds will be unrolled, although this macro
-//! currently can't see inside complex code (e.g. for loops within closures or other `macro_rules!`
-//! macros).
+//! currently can't see inside complex code (e.g. for loops within closures).
 //! 
 //! 
 //! ## Example
