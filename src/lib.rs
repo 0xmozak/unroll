@@ -34,14 +34,11 @@
 //! }
 //! ```
 
-extern crate proc_macro;
-#[macro_use]
-extern crate quote;
-
 use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
-          PatIdent, RangeLimits, Stmt, ExprIf, ExprLet};
+          PatIdent, RangeLimits, Stmt, ExprIf, ExprLet, parse_quote};
 use syn::token::Brace;
 use proc_macro::TokenStream;
+use quote::quote;
 
 /// Attribute used to unroll for loops found inside a function block.
 #[proc_macro_attribute]
@@ -115,7 +112,8 @@ fn unroll(expr: &Expr) -> Expr {
             ref mutability,
             ref ident,
             ref subpat,
-        }) = **pat
+            ..
+        }) = *pat
         {
             // Don't know how to deal with these so skip and return the original.
             if !by_ref.is_none() || !mutability.is_none() || !subpat.is_none() {
@@ -137,7 +135,7 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_from
                     {
-                        lit_int.value() as usize
+                        lit_int.base10_parse::<usize>().unwrap()
                     } else {
                         return forloop_with_body(new_body);
                     }
@@ -152,7 +150,7 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_to
                     {
-                        lit_int.value() as usize
+                        lit_int.base10_parse::<usize>().unwrap()
                     } else {
                         return forloop_with_body(new_body);
                     }
@@ -167,16 +165,13 @@ fn unroll(expr: &Expr) -> Expr {
 
                 let mut stmts = Vec::new();
                 for i in begin..end {
-                    let block_tokens = quote!(
+                    let declare_i: Stmt = parse_quote! {
                         #[allow(non_upper_case_globals)]
-                        {
-                            const #idx: usize = #i;
-                            #new_body
-                        });
-                    let block_stream: TokenStream = block_tokens.into();
-                    stmts.push(
-                        syn::parse::<Stmt>(block_stream).expect("Couldn't parse block into stmt."),
-                    );
+                        const #idx: usize = #i;
+                    };
+                    let mut augmented_body = new_body.clone();
+                    augmented_body.stmts.insert(0, declare_i);
+                    stmts.push(parse_quote! { #augmented_body });
                 }
                 let block = Block {
                     brace_token: Brace::default(),
