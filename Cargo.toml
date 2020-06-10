@@ -1,6 +1,6 @@
 [package]
 name = "unroll"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "An attribute-like procedural macro for unrolling for loops"
