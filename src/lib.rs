@@ -91,6 +91,7 @@ fn unroll(expr: &Expr) -> Expr {
     // impose a scope that we can break out of so we can return stmt without copying it.
     if let &Expr::ForLoop(ref for_loop) = expr {
         let ExprForLoop {
+            ref attrs,
             ref label,
             ref pat,
             expr: ref range_expr,
@@ -178,7 +179,7 @@ fn unroll(expr: &Expr) -> Expr {
                     stmts,
                 };
                 return Expr::Block(ExprBlock {
-                    attrs: Vec::new(),
+                    attrs: attrs.clone(),
                     label: label.clone(),
                     block,
                 });
