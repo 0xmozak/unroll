@@ -116,10 +116,10 @@ fn unroll(expr: &Expr) -> Expr {
             ref ident,
             ref subpat,
             ..
-        }) = *pat
+        }) = pat
         {
             // Don't know how to deal with these so skip and return the original.
-            if !by_ref.is_none() || !mutability.is_none() || !subpat.is_none() {
+            if by_ref.is_some() || mutability.is_some() || subpat.is_some() {
                 return forloop_with_body(new_body);
             }
             let idx = ident; // got the index variable name
@@ -138,7 +138,7 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_from
                     {
-                        lit_int.base10_parse::<usize>().unwrap()
+                        lit_int.base10_parse::<usize>().expect("literal should be a base-10 integer that fits in a `usize`")
                     } else {
                         return forloop_with_body(new_body);
                     }
@@ -153,7 +153,7 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_to
                     {
-                        lit_int.base10_parse::<usize>().unwrap()
+                        lit_int.base10_parse::<usize>().expect("literal should be a base-10 integer that fits in a `usize`")
                     } else {
                         return forloop_with_body(new_body);
                     }
