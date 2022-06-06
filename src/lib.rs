@@ -34,6 +34,8 @@
 //! }
 //! ```
 
+extern crate proc_macro;
+
 use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
           PatIdent, RangeLimits, Stmt, ExprIf, ExprLet, parse_quote};
 use syn::token::Brace;
