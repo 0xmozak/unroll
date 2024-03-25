@@ -1,6 +1,6 @@
 [package]
 name = "unroll"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "An attribute-like procedural macro for unrolling for loops"
@@ -21,11 +21,11 @@ maintenance = { status = "passively-maintained" }
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0", default-features = false, features = ["proc-macro", "full"] }
-quote = "1.0"
+syn = { version = "2", default-features = false, features = ["proc-macro", "full"] }
+quote = "1"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.5"
 rand = "0.8"
 
 [features]

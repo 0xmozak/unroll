@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::{Criterion, Fun};
-use rand::distributions::{Distribution, Standard};
+use criterion::{BenchmarkId, Criterion};
+use rand::distributions::Standard;
 use rand::prelude::*;
 use unroll::unroll_for_loops;
 
@@ -28,6 +28,7 @@ where
 }
 
 #[inline]
+#[allow(clippy::needless_range_loop)]
 fn mtx_vec_mul(mtx: &[[f64; N]; N], vec: &[f64; N]) -> [f64; N] {
     let mut out = [0.0; N];
     for col in 0..5 {
@@ -50,19 +51,23 @@ fn unroll_mtx_vec_mul(mtx: &[[f64; N]; N], vec: &[f64; N]) -> [f64; N] {
     out
 }
 
+fn ordinary(c: &mut Criterion) {
+    let (m, v) = make_random_prod_pair();
+    c.bench_with_input(BenchmarkId::new("mtx_vec_mul", 0), &(m, v), |b, (m, v)| {
+        b.iter(|| mtx_vec_mul(m, v))
+    });
+}
+
+fn unrolled_mtx_vec_mul(c: &mut Criterion) {
+    let (m, v) = make_random_prod_pair();
+    c.bench_with_input(BenchmarkId::new("mtx_vec_mul", 0), &(m, v), |b, (m, v)| {
+        b.iter(|| unroll_mtx_vec_mul(m, v))
+    });
+}
+
 fn matrix_vector_product(c: &mut Criterion) {
-    let mtx_vec_mul = Fun::new("Ordinary", move |b, _| {
-        let (m, v) = make_random_prod_pair();
-        b.iter(|| mtx_vec_mul(&m, &v))
-    });
-
-    let unrolled_mtx_vec_mul = Fun::new("Unrolled", move |b, _| {
-        let (m, v) = make_random_prod_pair();
-        b.iter(|| unroll_mtx_vec_mul(&m, &v))
-    });
-
-    let fns = vec![mtx_vec_mul, unrolled_mtx_vec_mul];
-    c.bench_functions("Matrix-Vector Product", fns, ());
+    ordinary(c);
+    unrolled_mtx_vec_mul(c);
 }
 
 criterion_group!(benches, matrix_vector_product);

@@ -5,8 +5,8 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::{Criterion, Fun};
-use rand::distributions::{Distribution, Standard, Uniform};
+use criterion::{BenchmarkId, Criterion};
+use rand::distributions::{Standard, Uniform};
 use rand::prelude::*;
 use unroll::unroll_for_loops;
 
@@ -116,33 +116,29 @@ fn test_mode_implementations() {
 fn unroll_mode(c: &mut Criterion) {
     test_mode_implementations();
 
-    let explicit_mode = Fun::new("Explicit Mode", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| explicit_mode(&v))
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Explicit Mode", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| explicit_mode(v)),
+    );
 
-    let unrolled_mode = Fun::new("Unrolled Mode", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| unrolled_mode(&v))
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Unrolled Mode", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| unrolled_mode(v)),
+    );
 
-    let unrolled_inner_mode4 = Fun::new("Unrolled Inner Mode 4", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| unrolled_inner_mode4(&v))
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Unrolled Inner Mode 4", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| unrolled_inner_mode4(v)),
+    );
 
-    let unrolled_inner_mode32 = Fun::new("Unrolled Inner Mode 32", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| unrolled_inner_mode32(&v))
-    });
-
-    let fns = vec![
-        explicit_mode,
-        unrolled_mode,
-        unrolled_inner_mode4,
-        unrolled_inner_mode32,
-    ];
-    c.bench_functions("Unroll Mode", fns, ());
+    c.bench_with_input(
+        BenchmarkId::new("Unrolled Inner Mode 32", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| unrolled_inner_mode32(v)),
+    );
 }
 
 criterion_group!(benches, unroll_mode);

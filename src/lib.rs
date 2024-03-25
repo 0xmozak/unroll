@@ -51,11 +51,11 @@ pub fn unroll_for_loops(_meta: TokenStream, input: TokenStream) -> TokenStream {
 
     if let Item::Fn(item_fn) = item {
         let new_block = {
-            let &ItemFn {
+            let ItemFn {
                 block: ref box_block,
                 ..
-            } = &item_fn;
-            unroll_in_block(&**box_block)
+            } = item_fn;
+            unroll_in_block(box_block)
         };
         let new_item = Item::Fn(ItemFn {
             block: Box::new(new_block),
@@ -69,22 +69,17 @@ pub fn unroll_for_loops(_meta: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Routine to unroll for loops within a block
 fn unroll_in_block(block: &Block) -> Block {
-    let &Block {
-        ref brace_token,
-        ref stmts,
-    } = block;
+    let Block { brace_token, stmts } = block;
     let mut new_stmts = Vec::new();
     for stmt in stmts.iter() {
-        if let &Stmt::Expr(ref expr) = stmt {
-            new_stmts.push(Stmt::Expr(unroll(expr)));
-        } else if let &Stmt::Semi(ref expr, semi) = stmt {
-            new_stmts.push(Stmt::Semi(unroll(expr), semi));
+        if let &Stmt::Expr(ref expr, semi) = stmt {
+            new_stmts.push(Stmt::Expr(unroll(expr), semi));
         } else {
             new_stmts.push((*stmt).clone());
         }
     }
     Block {
-        brace_token: brace_token.clone(),
+        brace_token: *brace_token,
         stmts: new_stmts,
     }
 }
@@ -93,7 +88,7 @@ fn unroll_in_block(block: &Block) -> Block {
 /// loop.
 fn unroll(expr: &Expr) -> Expr {
     // impose a scope that we can break out of so we can return stmt without copying it.
-    if let &Expr::ForLoop(ref for_loop) = expr {
+    if let Expr::ForLoop(for_loop) = expr {
         let ExprForLoop {
             ref attrs,
             ref label,
@@ -103,7 +98,7 @@ fn unroll(expr: &Expr) -> Expr {
             ..
         } = *for_loop;
 
-        let new_body = unroll_in_block(&*body);
+        let new_body = unroll_in_block(body);
 
         let forloop_with_body = |body| {
             Expr::ForLoop(ExprForLoop {
@@ -118,7 +113,7 @@ fn unroll(expr: &Expr) -> Expr {
             ref ident,
             ref subpat,
             ..
-        }) = pat
+        }) = **pat
         {
             // Don't know how to deal with these so skip and return the original.
             if by_ref.is_some() || mutability.is_some() || subpat.is_some() {
@@ -127,9 +122,9 @@ fn unroll(expr: &Expr) -> Expr {
             let idx = ident; // got the index variable name
 
             if let Expr::Range(ExprRange {
-                from: ref mb_box_from,
+                start: ref mb_box_from,
                 ref limits,
-                to: ref mb_box_to,
+                end: ref mb_box_to,
                 ..
             }) = **range_expr
             {
@@ -186,18 +181,18 @@ fn unroll(expr: &Expr) -> Expr {
                     brace_token: Brace::default(),
                     stmts,
                 };
-                return Expr::Block(ExprBlock {
+                Expr::Block(ExprBlock {
                     attrs: attrs.clone(),
                     label: label.clone(),
                     block,
-                });
+                })
             } else {
                 forloop_with_body(new_body)
             }
         } else {
             forloop_with_body(new_body)
         }
-    } else if let &Expr::If(ref if_expr) = expr {
+    } else if let Expr::If(if_expr) = expr {
         let ExprIf {
             ref cond,
             ref then_branch,
@@ -205,21 +200,21 @@ fn unroll(expr: &Expr) -> Expr {
             ..
         } = *if_expr;
         Expr::If(ExprIf {
-            cond: Box::new(unroll(&**cond)),
-            then_branch: unroll_in_block(&*then_branch),
-            else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&*x.1)))),
+            cond: Box::new(unroll(cond)),
+            then_branch: unroll_in_block(then_branch),
+            else_branch: else_branch.as_ref().map(|x| (x.0, Box::new(unroll(&x.1)))),
             ..(*if_expr).clone()
         })
-    } else if let &Expr::Let(ref let_expr) = expr {
+    } else if let Expr::Let(let_expr) = expr {
         let ExprLet { ref expr, .. } = *let_expr;
         Expr::Let(ExprLet {
-            expr: Box::new(unroll(&**expr)),
+            expr: Box::new(unroll(expr)),
             ..(*let_expr).clone()
         })
-    } else if let &Expr::Block(ref expr_block) = expr {
+    } else if let Expr::Block(expr_block) = expr {
         let ExprBlock { ref block, .. } = *expr_block;
         Expr::Block(ExprBlock {
-            block: unroll_in_block(&*block),
+            block: unroll_in_block(block),
             ..(*expr_block).clone()
         })
     } else {

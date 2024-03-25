@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::{Criterion, Fun};
-use rand::distributions::{Distribution, Standard};
+use criterion::{BenchmarkId, Criterion};
+use rand::distributions::Standard;
 use rand::prelude::*;
 use unroll::unroll_for_loops;
 
@@ -41,6 +41,7 @@ fn unrolled_sum(v: &[f64]) -> f64 {
     res.iter().sum()
 }
 
+#[allow(clippy::needless_range_loop)]
 #[inline]
 fn explicit_sum(v: &[f64]) -> f64 {
     let mut res = 0.0;
@@ -61,28 +62,29 @@ fn test_sum_implementations() {
 fn unroll_sum(c: &mut Criterion) {
     test_sum_implementations();
 
-    let iter_sum = Fun::new("Iter Sum", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| v.iter().sum::<f64>())
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Iter Sum", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| v.iter().sum::<f64>()),
+    );
 
-    let explicit_sum = Fun::new("Explicit Sum", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| explicit_sum(&v))
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Explicit Sum", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| explicit_sum(v)),
+    );
 
-    let unrolled_sum = Fun::new("Unrolled Sum", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| unrolled_sum(&v))
-    });
+    c.bench_with_input(
+        BenchmarkId::new("Unrolled Sum", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| unrolled_sum(v)),
+    );
 
-    let unrolled_inner_sum = Fun::new("Unrolled Inner Sum", move |b, _| {
-        let v = make_random_vec(LEN);
-        b.iter(|| unrolled_inner_sum(&v))
-    });
-
-    let fns = vec![iter_sum, explicit_sum, unrolled_sum, unrolled_inner_sum];
-    c.bench_functions("Unroll Sum", fns, ());
+    c.bench_with_input(
+        BenchmarkId::new("Unrolled Inner Sum", 0),
+        &make_random_vec(LEN),
+        |b, v| b.iter(|| unrolled_inner_sum(v)),
+    );
 }
 
 criterion_group!(benches, unroll_sum);
