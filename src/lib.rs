@@ -1,24 +1,24 @@
 #![recursion_limit = "128"]
 
 //! An attribute-like procedural macro for unrolling for loops with integer literal bounds.
-//! 
+//!
 //! This crate provides the [`unroll_for_loops`] attribute-like macro that can be applied to
 //! functions containing for-loops with integer bounds. This macro looks for loops to unroll and
 //! unrolls them at compile time.
-//! 
+//!
 //!
 //! ## Usage
-//! 
+//!
 //! Just add `#[unroll_for_loops]` above the function whose for loops you would like to unroll.
 //! Currently all for loops with integer literal bounds will be unrolled, although this macro
 //! currently can't see inside complex code (e.g. for loops within closures).
-//! 
-//! 
+//!
+//!
 //! ## Example
-//! 
+//!
 //! The following function computes a matrix-vector product and returns the result as an array.
 //! Both of the inner for-loops are unrolled when `#[unroll_for_loops]` is applied.
-//! 
+//!
 //! ```rust
 //! use unroll::unroll_for_loops;
 //!
@@ -36,11 +36,13 @@
 
 extern crate proc_macro;
 
-use syn::{Block, Expr, ExprBlock, ExprForLoop, ExprLit, ExprRange, Item, ItemFn, Lit, Pat,
-          PatIdent, RangeLimits, Stmt, ExprIf, ExprLet, parse_quote};
-use syn::token::Brace;
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::token::Brace;
+use syn::{
+    parse_quote, Block, Expr, ExprBlock, ExprForLoop, ExprIf, ExprLet, ExprLit, ExprRange, Item,
+    ItemFn, Lit, Pat, PatIdent, RangeLimits, Stmt,
+};
 
 /// Attribute used to unroll for loops found inside a function block.
 #[proc_macro_attribute]
@@ -138,7 +140,9 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_from
                     {
-                        lit_int.base10_parse::<usize>().expect("literal should be a base-10 integer that fits in a `usize`")
+                        lit_int
+                            .base10_parse::<usize>()
+                            .expect("literal should be a base-10 integer that fits in a `usize`")
                     } else {
                         return forloop_with_body(new_body);
                     }
@@ -153,7 +157,9 @@ fn unroll(expr: &Expr) -> Expr {
                         ..
                     }) = **box_to
                     {
-                        lit_int.base10_parse::<usize>().expect("literal should be a base-10 integer that fits in a `usize`")
+                        lit_int
+                            .base10_parse::<usize>()
+                            .expect("literal should be a base-10 integer that fits in a `usize`")
                     } else {
                         return forloop_with_body(new_body);
                     }
@@ -205,10 +211,7 @@ fn unroll(expr: &Expr) -> Expr {
             ..(*if_expr).clone()
         })
     } else if let &Expr::Let(ref let_expr) = expr {
-        let ExprLet {
-            ref expr,
-            ..
-        } = *let_expr;
+        let ExprLet { ref expr, .. } = *let_expr;
         Expr::Let(ExprLet {
             expr: Box::new(unroll(&**expr)),
             ..(*let_expr).clone()

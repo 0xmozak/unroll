@@ -61,10 +61,7 @@ fn matrix_vector_product(c: &mut Criterion) {
         b.iter(|| unroll_mtx_vec_mul(&m, &v))
     });
 
-    let fns = vec![
-        mtx_vec_mul,
-        unrolled_mtx_vec_mul,
-    ];
+    let fns = vec![mtx_vec_mul, unrolled_mtx_vec_mul];
     c.bench_functions("Matrix-Vector Product", fns, ());
 }
 

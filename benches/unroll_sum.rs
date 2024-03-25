@@ -81,12 +81,7 @@ fn unroll_sum(c: &mut Criterion) {
         b.iter(|| unrolled_inner_sum(&v))
     });
 
-    let fns = vec![
-        iter_sum,
-        explicit_sum,
-        unrolled_sum,
-        unrolled_inner_sum,
-    ];
+    let fns = vec![iter_sum, explicit_sum, unrolled_sum, unrolled_inner_sum];
     c.bench_functions("Unroll Sum", fns, ());
 }
 

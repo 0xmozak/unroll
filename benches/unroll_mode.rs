@@ -36,11 +36,15 @@ fn unrolled_inner_mode4(data: &[usize]) -> (usize, usize) {
 
     for i in (0..data.len()).step_by(4) {
         for j in 0..4 {
-            bins[data[i+j]][j] += 1;
+            bins[data[i + j]][j] += 1;
         }
     }
 
-    bins.into_iter().map(|f| f.iter().sum()).enumerate().max_by_key(|&(_, f)| f).unwrap_or((0, 0))
+    bins.into_iter()
+        .map(|f| f.iter().sum())
+        .enumerate()
+        .max_by_key(|&(_, f)| f)
+        .unwrap_or((0, 0))
 }
 
 #[inline]
@@ -51,11 +55,15 @@ fn unrolled_inner_mode32(data: &[usize]) -> (usize, usize) {
 
     for i in (0..data.len()).step_by(32) {
         for j in 0..32 {
-            bins[data[i+j]][j] += 1;
+            bins[data[i + j]][j] += 1;
         }
     }
 
-    bins.into_iter().map(|f| f.iter().sum()).enumerate().max_by_key(|&(_, f)| f).unwrap_or((0, 0))
+    bins.into_iter()
+        .map(|f| f.iter().sum())
+        .enumerate()
+        .max_by_key(|&(_, f)| f)
+        .unwrap_or((0, 0))
 }
 
 #[inline]
@@ -65,11 +73,15 @@ fn unrolled_mode(data: &[usize]) -> (usize, usize) {
 
     for i in (0..data.len()).step_by(32) {
         for j in 0..32 {
-            bins[data[i+j]][j] += 1;
+            bins[data[i + j]][j] += 1;
         }
     }
 
-    bins.into_iter().map(|f| f.iter().sum()).enumerate().max_by_key(|&(_, f)| f).unwrap_or((0, 0))
+    bins.into_iter()
+        .map(|f| f.iter().sum())
+        .enumerate()
+        .max_by_key(|&(_, f)| f)
+        .unwrap_or((0, 0))
 }
 
 #[inline]
@@ -78,7 +90,11 @@ fn explicit_mode(data: &[usize]) -> (usize, usize) {
     for &x in data.iter() {
         bins[x] += 1;
     }
-    bins.iter().cloned().enumerate().max_by_key(|&(_, f)| f).unwrap_or((0, 0))
+    bins.iter()
+        .cloned()
+        .enumerate()
+        .max_by_key(|&(_, f)| f)
+        .unwrap_or((0, 0))
 }
 
 // Make sure the two implementations return the same results and are correct.
@@ -96,7 +112,6 @@ fn test_mode_implementations() {
     assert_eq!(explicit_mode(&v), unrolled_inner_mode4(&v));
     assert_eq!(explicit_mode(&v), unrolled_inner_mode32(&v));
 }
-
 
 fn unroll_mode(c: &mut Criterion) {
     test_mode_implementations();
